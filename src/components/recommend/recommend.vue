@@ -1,6 +1,9 @@
 <template>
-    <div class="recommend">
-      <scroll :data="discList" class="recommend-content" ref="scroll">
+    <div class="recommend" ref="recommend">
+      <scroll 
+      :data="discList" 
+      class="recommend-content" 
+      ref="scroll">
         <div>
           <div class="banner" ref="banner" v-if="recommends.length > 0">
             <slider :recommends="recommends" :loop="loop" :auto="auto">
@@ -14,7 +17,11 @@
           <div class="discList" ref="discList">
             <h1 class="title">热门歌单推荐</h1>
             <ul class="disc">
-              <li v-for="(item,index) in discList" :key="index" class="disc-item">
+              <li 
+              v-for="(item,index) in discList" 
+              :key="index" 
+              class="disc-item"
+              @click.stop.prevent="selectDisc(item,index)">
                 <img class="image" width="60" height="60" v-lazy="item.imgurl">
                 <div class="block">
                   <span class="name" v-html="item.creator.name"></span>
@@ -28,6 +35,7 @@
           </div>
         </div>
       </scroll>
+      <router-view></router-view>
     </div>
 </template>
 
@@ -37,9 +45,15 @@ import Slider from 'base/slider/slider'
 import Scroll from 'base/scroll/scroll'
 import Loading from 'base/loading/loading'
 import {ERR_OK} from 'api/config'
+import {playlistMixin} from 'common/js/mixin'
+import {mapMutations} from 'vuex'
 export default {
+  mixins: [playlistMixin],
   props: {},
   methods: {
+    ...mapMutations({
+      setDisc: 'SET_DISC'
+    }),
     _getRecommends() {
       getRecommends().then((res) => {
         if (res.code === ERR_OK) {
@@ -53,6 +67,17 @@ export default {
           this.discList = res.data.list
         }
       })
+    },
+    handlePlaylist(playlist) {
+      const bottom = playlist.length > 0 ? '60px' : ''
+      this.$refs.recommend.style.bottom = bottom
+      this.$refs.scroll.refresh()
+    },
+    selectDisc(item, index) {
+      this.$router.push({
+        path: `/recommend/${item.dissid}`
+      })
+      this.setDisc(item)
     }
   },
   computed: {},

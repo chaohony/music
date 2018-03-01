@@ -1,21 +1,31 @@
 <template>
-  <div class="loading">
-    <img width="40" height="40" src="./loading.gif">
+  <div class="loading" ref="loading">
+    <img width="20" height="20" src="./loading.gif">
   </div>
 </template>
 
 <script>
 export default {
-  props: {},
+  props: {
+    noPadding: {
+      type: Boolean,
+      default: false
+    }
+  },
   methods: {},
   computed: {},
   components: {},
   data () {
     return {}
+  },
+  mounted() {
+    if (this.noPadding) {
+      this.$refs.loading.style.paddingTop = '5%'
+    }
   }
 }
 </script>
-<style scoped lang="stylus" rel="stylesheet/stylus">
+<style lang="stylus" rel="stylesheet/stylus">
 @import "../../common/stylus/variable.styl"
 @import "../../common/stylus/mixin.styl"
 .loading

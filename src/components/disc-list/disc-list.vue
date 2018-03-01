@@ -1,11 +1,11 @@
 <template>
   <transition name="slide">
-    <div class="singer-detail">
-      <music-list 
+    <div class="disc-list">
+      <music-list
       :title="title" 
       :image="image" 
       :songs="songs"
-      ></music-list>
+      :rank="rank"></music-list>
     </div>
   </transition>
 </template>
@@ -13,41 +13,45 @@
 <script>
 import MusicList from 'base/music-list/music-list'
 import {ERR_OK} from 'api/config'
-import {getSingerDetail} from 'api/singer'
+import {getRanklist} from 'api/rank'
 import {mapGetters} from 'vuex'
 import {createSong} from 'common/js/song'
 export default {
   props: {},
   methods: {
-    _getSingerDetail() {
-      if (!this.singer.id) {
+    _getRanklist() {
+      if (!this.topList.id) {
         this.$router.back()
+        return
       }
-      getSingerDetail(this.singer.id).then((res) => {
+      getRanklist(this.topList.id).then((res) => {
         if (res.code === ERR_OK) {
-          this.singerDetail = res.data
-          this.songs = this._normalizeSongs(res.data.list)
+          this.songs = this._normalizeSongs(res.songlist)
         }
       })
     },
     _normalizeSongs(list) {
       let ret = []
       list.forEach((item, index) => {
-        let {musicData} = item
-        ret.push(createSong(musicData))
+        const musicData = item.data
+        if (musicData.songid && musicData.albumid) {
+          ret.push(createSong(musicData))
+        }
       })
       return ret
     }
   },
   computed: {
     ...mapGetters([
-      'singer'
+      'topList'
     ]),
     title() {
-      return this.singer.name
+      return this.topList.topTitle
     },
     image() {
-      return this.singer.avatar
+      if (this.songs.length) {
+        return this.songs[0].image
+      }
     }
   },
   components: {
@@ -55,18 +59,19 @@ export default {
   },
   data () {
     return {
-      songs: []
+      songs: [],
+      rank: true
     }
   },
-  mounted() {
-    this._getSingerDetail()
+  created() {
+    this._getRanklist()
   }
 }
 </script>
 <style scoped lang="stylus" rel="stylesheet/stylus">
 @import "../../common/stylus/variable.styl"
 @import "../../common/stylus/mixin.styl"
-.singer-detail
+.disc-list
   position fixed
   top 0
   left 0

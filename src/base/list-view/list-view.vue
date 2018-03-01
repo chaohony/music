@@ -54,9 +54,11 @@
 import Scroll from 'base/scroll/scroll'
 import {getData} from 'common/js/util'
 import Loading from 'base/loading/loading'
+import {playlistMixin} from 'common/js/mixin'
 const ANCHOR_HEIGHT = 17
 const FIXED_HEIGHT = 30
 export default {
+  mixins: [playlistMixin],
   props: {
     singerList: {
       type: Array,
@@ -122,6 +124,11 @@ export default {
     },
     _touchend(e) {
       this.touch.initiated = false
+    },
+    handlePlaylist(playlist) {
+      const bottom = playlist.length > 0 ? '60px' : ''
+      this.$refs.listview.$el.style.bottom = bottom
+      this.$refs.listview.refresh()
     }
   },
   computed: {

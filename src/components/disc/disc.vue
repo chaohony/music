@@ -1,53 +1,47 @@
 <template>
   <transition name="slide">
-    <div class="singer-detail">
-      <music-list 
-      :title="title" 
-      :image="image" 
-      :songs="songs"
-      ></music-list>
+    <div class="disc">
+      <music-list :title="title" :image="image"
+      :songs="songlist"></music-list>
     </div>
   </transition>
 </template>
 
 <script>
 import MusicList from 'base/music-list/music-list'
-import {ERR_OK} from 'api/config'
-import {getSingerDetail} from 'api/singer'
 import {mapGetters} from 'vuex'
+import {getSongList} from 'api/recommend'
 import {createSong} from 'common/js/song'
 export default {
   props: {},
   methods: {
-    _getSingerDetail() {
-      if (!this.singer.id) {
+    _getSongList() {
+      if (!this.disc.dissid) {
         this.$router.back()
       }
-      getSingerDetail(this.singer.id).then((res) => {
-        if (res.code === ERR_OK) {
-          this.singerDetail = res.data
-          this.songs = this._normalizeSongs(res.data.list)
-        }
+      getSongList(this.disc.dissid).then((res) => {
+        this.songlist = this._normalizeSongs(res.cdlist[0].songlist)
       })
     },
     _normalizeSongs(list) {
       let ret = []
       list.forEach((item, index) => {
-        let {musicData} = item
-        ret.push(createSong(musicData))
+        if (item.songid && item.albumid) {
+          ret.push(createSong(item))
+        }
       })
       return ret
     }
   },
   computed: {
     ...mapGetters([
-      'singer'
+      'disc'
     ]),
     title() {
-      return this.singer.name
+      return this.disc.dissname
     },
     image() {
-      return this.singer.avatar
+      return this.disc.imgurl
     }
   },
   components: {
@@ -55,18 +49,18 @@ export default {
   },
   data () {
     return {
-      songs: []
+      songlist: []
     }
   },
-  mounted() {
-    this._getSingerDetail()
+  created() {
+    this._getSongList()
   }
 }
 </script>
 <style scoped lang="stylus" rel="stylesheet/stylus">
 @import "../../common/stylus/variable.styl"
 @import "../../common/stylus/mixin.styl"
-.singer-detail
+.disc
   position fixed
   top 0
   left 0

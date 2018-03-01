@@ -17,7 +17,8 @@
       ref="song-list" 
       :songs="songs"
       @scroll="scroll"
-      @selectItem="selectItem"></song-list>  
+      @selectItem="selectItem"
+      :rank="rank"></song-list>  
     </div>
 </template>
 
@@ -40,6 +41,10 @@ export default {
       default() {
         return []
       }
+    },
+    rank: {
+      type: Boolean,
+      default: false
     }
   },
   methods: {
@@ -48,9 +53,7 @@ export default {
       'randomPlay'
     ]),
     _back() {
-      this.$router.push({
-        path: '/singer'
-      })
+      this.$router.back()
     },
     scroll(scrollY) {
       let zIndex = -1

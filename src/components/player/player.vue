@@ -6,7 +6,10 @@
       @after-enter="afterEnter"
       @leave="leave"
       @after-leave="afterLeave">
-        <div class="normal-player" v-show="fullScreen">
+        <div class="normal-player" v-show="fullScreen"
+        @touchstart="touchstart"
+        @touchmove="touchmove"
+        @touchend="touchend">
           <div class="player-container">
             <img :src="currentSong.image" class="filter-image">
             <div class="back">
@@ -16,9 +19,6 @@
             <h5 class="singer">{{ currentSong.singer }}</h5>
             <div 
             class="cd-wrapper"
-            @touchstart.stop.prevent="touchstart"
-            @touchmove.stop.prevent="touchmove"
-            @touchend.stop.prevent="touchend"
             ref="cd-wrapper">
               <div class="cd-container" ref="cd-container">
                 <img class="cd" ref="cd" :class="run_pause" :src="currentSong.image">
@@ -554,7 +554,7 @@ export default {
       overflow hidden
       text-align center
       font-size 14px
-      z-index -1
+      z-index 0
       .lyric-item
         margin-bottom 16px
         color $color-text-l

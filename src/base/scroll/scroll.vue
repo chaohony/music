@@ -30,11 +30,15 @@ export default {
     },
     listenToScroll: {
       type: Boolean,
-      default: false
+      default: true
     },
     direction: {
       type: String,
       default: DIRECTION_V
+    },
+    pullup: {
+      type: Boolean,
+      default: false
     }
   },
   methods: {
@@ -49,15 +53,8 @@ export default {
     },
     scrollTo(x, y, time = 300) {
       this.scroll && this.scroll.scrollTo(x, y, time)
-    }
-  },
-  computed: {},
-  components: {},
-  data () {
-    return {}
-  },
-  mounted() {
-    if (!this.scroll) {
+    },
+    _initScroll() {
       this.$nextTick(() => {
         this.scroll = new BScroll(this.$refs.scroll, {
           probeType: this.probeType,
@@ -67,8 +64,23 @@ export default {
         if (this.listenToScroll) {
           this.scroll.on('scroll', this.onScroll)
         }
+        if (this.pullup) {
+          this.scroll.on('scrollEnd', () => {
+            if (this.scroll.y <= (this.scroll.maxScrollY + 50)) {
+              this.$emit('scrollToEnd')
+            }
+          })
+        }
       })
     }
+  },
+  computed: {},
+  components: {},
+  data () {
+    return {}
+  },
+  mounted() {
+    this._initScroll()
   },
   watch: {
     data() {
