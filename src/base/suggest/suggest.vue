@@ -5,6 +5,8 @@
   :pullup="pullup"
   @scrollToEnd="searchMore"
   ref="scroll"
+  :beforeScroll="beforeScroll"
+  @beforeScrollStart="beforeScrollStart"
   >
     <ul class="suggest-wrapper">
       <li 
@@ -137,11 +139,15 @@ export default {
       } else {
         this.addSong(item)
       }
+      this.$emit('select')
     },
     handlePlaylist(playlist) {
       const bottom = playlist.length > 0 ? '60px' : ''
       this.$refs.scroll.$el.style.bottom = bottom
       this.$refs.scroll.refresh()
+    },
+    beforeScrollStart() {
+      this.$emit('beforeScrollStart')
     }
   },
   computed: {},
@@ -162,6 +168,9 @@ export default {
       pullup: true,
       hasMore: true
     }
+  },
+  created() {
+    this.beforeScroll = true
   }
 }
 </script>
@@ -170,6 +179,7 @@ export default {
 @import "../../common/stylus/mixin.styl"
 .suggest
   overflow hidden
+  background $color-background
 .suggest-item
   height 30px
   line-height 30px
