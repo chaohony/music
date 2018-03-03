@@ -65,6 +65,7 @@ export default {
   left 0
   right 0
   background $color-background-d
+  z-index 998
   .confirm-wrapper
     position relative
     width 100%
@@ -74,15 +75,18 @@ export default {
       top 50%
       left 50%
       width 300px
+      z-index 999
       margin-left -150px
-      margin-top -50px
+      margin-top -80px
       border-radius 10px
       text-align center
-      background rgba(255,255,255,.1)
+      background #333
       font-size 0
       .text
         font-size 16px
         padding-top 10px
+        height 40px
+        line-height 40px
         color rgba(255,255,255,.5)
         width 100%
         border-1px(rgba(0,0,0,.5))

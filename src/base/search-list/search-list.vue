@@ -1,11 +1,7 @@
 <template>
   <div class="search-list">
     <ul>
-      <li class="search-item" 
-          v-for="(item,index) in searches" 
-          :key="index"
-          @click.stop.prevent="selectItem(item)"    
-      >
+      <li class="search-item" v-for="(item,index) in searches" :key="index" @click.stop.prevent="selectItem(item)">
         <span class="name">
           {{ item }}
         </span>

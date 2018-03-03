@@ -1,15 +1,7 @@
 <template>
     <div class="player" v-show="playList.length > 0">
-      <transition 
-      name="fly"
-      @enter="enter"
-      @after-enter="afterEnter"
-      @leave="leave"
-      @after-leave="afterLeave">
-        <div class="normal-player" v-show="fullScreen"
-        @touchstart="touchstart"
-        @touchmove="touchmove"
-        @touchend="touchend">
+      <transition name="fly" @enter="enter" @after-enter="afterEnter" @leave="leave" @after-leave="afterLeave">
+        <div class="normal-player" v-show="fullScreen" @touchstart="touchstart" @touchmove="touchmove" @touchend="touchend">
           <div class="player-container">
             <img :src="currentSong.image" class="filter-image">
             <div class="back">
@@ -17,9 +9,7 @@
             </div>
             <h5 class="name">{{ currentSong.name }}</h5>
             <h5 class="singer">{{ currentSong.singer }}</h5>
-            <div 
-            class="cd-wrapper"
-            ref="cd-wrapper">
+            <div class="cd-wrapper" ref="cd-wrapper">
               <div class="cd-container" ref="cd-container">
                 <img class="cd" ref="cd" :class="run_pause" :src="currentSong.image">
                 <p class="currentLyric">{{ currentLine }}</p>
@@ -29,12 +19,7 @@
               <span class="dot" :class="{active: currentShow === 'lyric'}"></span>
             </div>
             </div>
-            <progress-bar 
-            :currentTime="currentTime"
-            :duration="duration"
-            @slide="slide"
-            @addSlide="addSlide"
-            ref="progress-bar"></progress-bar>
+            <progress-bar :currentTime="currentTime" :duration="duration" @slide="slide" @addSlide="addSlide" ref="progress-bar"></progress-bar>
             <div class="btn-group">
               <span class="btn-l-l">
                 <i class="icon" :class="iconMode" @click.stop.prevent="changeMode"></i>
@@ -43,10 +28,7 @@
                 <i class="icon icon-prev" :class="{disable: !songReady}" @click.stop="prev"></i>
               </span>
               <span class="btn-m">
-                <i 
-                class="icon icon-b" 
-                :class="[icon_play,{disable: !songReady}]" 
-                @click.stop.prevent="togglePlay"></i>
+                <i class="icon icon-b" :class="[icon_play,{disable: !songReady}]" @click.stop.prevent="togglePlay"></i>
               </span>
               <span class="btn-r">
                 <i class="icon icon-next" :class="{disable: !songReady}" @click.stop="next"></i>
@@ -56,11 +38,7 @@
               </span>
             </div>
           </div>
-          <scroll 
-          class="lyric-container" 
-          v-if="currentLyric" 
-          :data="currentLyric.lines"
-          ref="lyric-container">
+          <scroll class="lyric-container" v-if="currentLyric" :data="currentLyric.lines" ref="lyric-container">
             <ul class="lyric-wrapper">
               <li 
               :class="{active: index === currentLyricNum}" 
@@ -91,16 +69,12 @@
             </progress-circle>
           </div>
           <div class="list">
-            <i class="icon-playlist"></i>
+            <i class="icon-playlist" @click.stop="showPlaylist"></i>
           </div>
         </div>
       </div>
-      <audio 
-      ref="audio" 
-      :src="currentSong.url"
-      @canplay="ready"
-      @timeupdate="timeupdate"
-      @ended="end"></audio>
+      <play-list ref="play-list"></play-list>
+      <audio ref="audio" :src="currentSong.url" @canplay="ready" @timeupdate="timeupdate" @ended="end"></audio>
     </div>
 </template>
 
@@ -113,6 +87,7 @@ import {playMode} from 'common/js/config'
 import {shuffle} from 'common/js/util'
 import Lyric from 'lyric-parser'
 import Scroll from 'base/scroll/scroll'
+import PlayList from 'components/play-list/play-list'
 export default {
   props: {},
   methods: {
@@ -353,6 +328,9 @@ export default {
       this.$refs['lyric-container'].$el.style.transform = `translate3d(${offset}px,0,0)`
       this.$refs['lyric-container'].$el.style['transition-duration'] = `300ms`
       this.$refs['cd-container'].style.opacity = opacity
+    },
+    showPlaylist() {
+      this.$refs['play-list'].show()
     }
   },
   computed: {
@@ -392,6 +370,10 @@ export default {
       })
     },
     currentSong(newSong, oldSong) {
+      if (!newSong.id) {
+        this.$refs.audio.pause()
+        return
+      }
       if (newSong.id !== oldSong.id) {
         this.songReady = false
         if (this.currentLyric) {
@@ -407,7 +389,8 @@ export default {
   components: {
     ProgressBar,
     ProgressCircle,
-    Scroll
+    Scroll,
+    PlayList
   },
   data () {
     return {
@@ -566,6 +549,7 @@ export default {
     bottom 0
     height 60px
     right 0
+    z-index 150
     background $color-highlight-background
     display flex
     justify-content space-between
