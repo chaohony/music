@@ -1,20 +1,7 @@
 <template>
-  <scroll 
-  class="suggest" 
-  :data="result" 
-  :pullup="pullup"
-  @scrollToEnd="searchMore"
-  ref="scroll"
-  :beforeScroll="beforeScroll"
-  @beforeScrollStart="beforeScrollStart"
-  >
+  <scroll class="suggest" :data="result" :pullup="pullup" @scrollToEnd="searchMore" ref="scroll" :beforeScroll="beforeScroll" @beforeScrollStart="beforeScrollStart">
     <ul class="suggest-wrapper">
-      <li 
-      v-for="(item,index) in result" 
-      :key="index" 
-      class="suggest-item"
-      @click.stop.prevent="selectItem(item)"
-      >
+      <li v-for="(item,index) in result" :key="index" class="suggest-item" @click.stop.prevent="selectItem(item)">
         <div class="icon">
           <i :class="getIcon(item)"></i>
         </div>
@@ -50,6 +37,10 @@ export default {
       default: ''
     },
     showSinger: {
+      type: Boolean,
+      default: true
+    },
+    reserveBottom: {
       type: Boolean,
       default: true
     }
@@ -142,6 +133,9 @@ export default {
       this.$emit('select')
     },
     handlePlaylist(playlist) {
+      if (!this.reserveBottom) {
+        return
+      }
       const bottom = playlist.length > 0 ? '60px' : ''
       this.$refs.scroll.$el.style.bottom = bottom
       this.$refs.scroll.refresh()

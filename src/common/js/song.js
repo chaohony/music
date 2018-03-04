@@ -3,7 +3,7 @@ import {ERR_OK} from 'api/config'
 import {getUid} from './uid'
 import {Base64} from 'js-base64'
 let urlMap = {}
-class Song {
+export class Song {
   constructor({id, mid, singer, name, album, duration, image}) {
     this.id = id
     this.mid = mid

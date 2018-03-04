@@ -1,7 +1,7 @@
 <template>
   <div class="search-list">
-    <ul>
-      <li class="search-item" v-for="(item,index) in searches" :key="index" @click.stop.prevent="selectItem(item)">
+    <transition-group tag="ul" name="slide">
+      <li class="search-item" v-for="item in searches" :key="item" @click.stop.prevent="selectItem(item)">
         <span class="name">
           {{ item }}
         </span>
@@ -9,7 +9,7 @@
           <i class="icon-delete" @click.stop.prevent="deleteOne(item)"></i>
         </span>
       </li>
-    </ul>
+    </transition-group>
   </div>
 </template>
 
@@ -46,8 +46,10 @@ export default {
   justify-content space-between
   padding-bottom 15px
   font-size 14px
-  .name
-    vertical-align top
-  .icon
-    font-size 12px
+  height 25px
+  line-height 25px
+  &.slide-enter-active,&.slide-leave-active
+    transition all 0.2s linear
+  &.slide-enter,&.slide-leave-to
+    height 0
 </style>

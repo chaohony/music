@@ -1,7 +1,17 @@
 <template>
     <div class="player" v-show="playList.length > 0">
-      <transition name="fly" @enter="enter" @after-enter="afterEnter" @leave="leave" @after-leave="afterLeave">
-        <div class="normal-player" v-show="fullScreen" @touchstart="touchstart" @touchmove="touchmove" @touchend="touchend">
+      <transition name="fly" 
+                  @enter="enter" 
+                  @after-enter="afterEnter" 
+                  @leave="leave" 
+                  @after-leave="afterLeave"
+      >
+        <div class="normal-player" 
+             v-show="fullScreen" 
+             @touchstart="touchstart" 
+             @touchmove="touchmove" 
+             @touchend="touchend"
+        >
           <div class="player-container">
             <img :src="currentSong.image" class="filter-image">
             <div class="back">
@@ -34,7 +44,7 @@
                 <i class="icon icon-next" :class="{disable: !songReady}" @click.stop="next"></i>
               </span>
               <span class="btn-r-r">
-                <i class="icon icon-not-favorite"></i>
+                <i class="icon" @click.stop="toggleFavorite(currentSong)" :class="getFavorite(currentSong)"></i>
               </span>
             </div>
           </div>
@@ -74,36 +84,40 @@
         </div>
       </div>
       <play-list ref="play-list"></play-list>
-      <audio ref="audio" :src="currentSong.url" @canplay="ready" @timeupdate="timeupdate" @ended="end"></audio>
+      <audio ref="audio" 
+             @playing="ready" 
+             @timeupdate="timeupdate" 
+             @ended="end"
+      ></audio>
     </div>
 </template>
 
 <script>
-import {mapGetters, mapMutations} from 'vuex'
+import {mapMutations, mapActions} from 'vuex'
 import animations from 'create-keyframe-animation'
 import ProgressCircle from 'base/progress-circle/progress-circle'
 import ProgressBar from 'base/progress-bar/progress-bar'
 import {playMode} from 'common/js/config'
-import {shuffle} from 'common/js/util'
 import Lyric from 'lyric-parser'
 import Scroll from 'base/scroll/scroll'
 import PlayList from 'components/play-list/play-list'
+import {playerMixin} from 'common/js/mixin'
 export default {
+  mixins: [playerMixin],
   props: {},
   methods: {
     ...mapMutations({
       setState: 'SET_PLAY_STATE',
-      setIndex: 'SET_CURRENT_INDEX',
-      setScreen: 'SET_FULLSCREEN',
-      setPlayMode: 'SET_PLAY_MODE',
-      setPlayList: 'SET_PLAY_LIST'
+      setScreen: 'SET_FULLSCREEN'
     }),
+    ...mapActions([
+      'savePlayHistory'
+    ]),
     togglePlay() {
-      if (this.playing) {
-        this.setState(false)
-      } else {
-        this.setState(true)
+      if (!this.songReady) {
+        return
       }
+      this.setState(!this.playing)
       if (this.currentLyric) {
         this.currentLyric.togglePlay()
       }
@@ -158,6 +172,7 @@ export default {
     },
     ready() {
       this.songReady = true
+      this.savePlayHistory(this.currentSong)
     },
     end() {
       if (this.playMode === playMode.loop) {
@@ -243,24 +258,6 @@ export default {
         this.currentLyric.seek(temptime * 1000)
       }
     },
-    resetCurrentIndex(list) {
-      let index = list.findIndex((item, index) => {
-        return this.currentSong.id === item.id
-      })
-      this.setIndex(index)
-    },
-    changeMode() {
-      this.setPlayMode((this.playMode + 1) % 3)
-      let list = null
-      if (this.playMode === playMode.random) {
-        let temp = this.sequenceList.slice()
-        list = shuffle(temp)
-      } else {
-        list = this.sequenceList
-      }
-      this.resetCurrentIndex(list)
-      this.setPlayList(list)
-    },
     handleLyric({lineNum, txt}) {
       this.currentLyricNum = lineNum
       if (lineNum > 5) {
@@ -273,6 +270,9 @@ export default {
     },
     getLyric() {
       this.currentSong.getLyric().then((res) => {
+        if (this.currentSong.lyric !== res) {
+          return
+        }
         this.currentLyric = new Lyric(res, this.handleLyric)
         if (this.playing) {
           this.currentLyric.play()
@@ -280,21 +280,22 @@ export default {
       }).catch(() => {
         this.currentLyric = null
         this.currentLyric = 0
+        this.currentLineNum = 0
       })
     },
     touchstart(e) {
       this.touch.initiated = true
-      this.touch.x1 = e.touches[0].clientX
-      this.touch.y1 = e.touches[0].clientY
+      const touch = e.touches[0]
+      this.touch.x1 = touch.clientX
+      this.touch.y1 = touch.clientY
     },
     touchmove(e) {
       if (!this.touch.initiated) {
         return
       }
-      this.touch.x2 = e.touches[0].clientX
-      this.touch.y2 = e.touches[0].clientY
-      let deltaX = this.touch.x2 - this.touch.x1
-      let deltaY = this.touch.y2 - this.touch.y2
+      const touch = e.touches[0]
+      let deltaX = touch.clientX - this.touch.x1
+      let deltaY = touch.clientY - this.touch.y2
       if (Math.abs(deltaY) > Math.abs(deltaX)) {
         return
       }
@@ -302,10 +303,11 @@ export default {
       let offset = Math.min(0, Math.max(-window.innerWidth, left + deltaX))
       this.touch.percent = Math.abs(offset / window.innerWidth)
       this.$refs['lyric-container'].$el.style.transform = `translate3d(${offset}px,0,0)`
+      this.$refs['lyric-container'].$el.style.transitionDuration = 0
       this.$refs['cd-container'].style.opacity = 1 - this.touch.percent
+      this.$refs['cd-container'].style.transitionDuration = 0
     },
     touchend() {
-      this.touch.initiated = false
       let offset
       let opacity
       if (this.currentShow === 'cd') {
@@ -315,6 +317,7 @@ export default {
           opacity = 0
         } else {
           offset = 0
+          opacity = 1
         }
       } else {
         if (this.touch.percent < 0.9) {
@@ -323,26 +326,25 @@ export default {
           opacity = 1
         } else {
           offset = -window.innerWidth
+          opacity = 0
         }
       }
-      this.$refs['lyric-container'].$el.style.transform = `translate3d(${offset}px,0,0)`
-      this.$refs['lyric-container'].$el.style['transition-duration'] = `300ms`
-      this.$refs['cd-container'].style.opacity = opacity
+      const lyricContainer = this.$refs['lyric-container']
+      const cdContainer = this.$refs['cd-container']
+      if (lyricContainer) {
+        lyricContainer.$el.style.transform = `translate3d(${offset}px,0,0)`
+        lyricContainer.$el.style['transition-duration'] = `300ms`
+      }
+      cdContainer.style.opacity = opacity
+      cdContainer.style['transition-duration'] = `300ms`
+      this.touch = {}
+      this.touch.initiated = false
     },
     showPlaylist() {
       this.$refs['play-list'].show()
     }
   },
   computed: {
-    ...mapGetters([
-      'playList',
-      'currentSong',
-      'playing',
-      'currentIndex',
-      'fullScreen',
-      'playMode',
-      'sequenceList'
-    ]),
     icon_play() {
       return this.playing ? 'icon-pause' : 'icon-play'
     },
@@ -354,9 +356,6 @@ export default {
     },
     percent() {
       return this.currentTime / this.duration
-    },
-    iconMode() {
-      return this.playMode === playMode.sequence ? 'icon-sequence' : this.playMode === playMode.random ? 'icon-random' : 'icon-loop'
     }
   },
   watch: {
@@ -374,16 +373,24 @@ export default {
         this.$refs.audio.pause()
         return
       }
-      if (newSong.id !== oldSong.id) {
-        this.songReady = false
-        if (this.currentLyric) {
-          this.currentLyric.stop()
-        }
-        this.$nextTick(() => {
-          this.$refs.audio.play()
-          this.getLyric()
-        })
+      if (newSong.id === oldSong.id) {
+        return
       }
+      if (this.currentLyric) {
+        this.currentLyric.stop()
+        this.currentTime = 0
+        this.currentLine = ''
+        this.currentLyricNum = 0
+      }
+      this.songReady = false
+      this.$refs.audio.src = newSong.url
+      this.$refs.audio.play()
+      // 若歌曲 5s 内未播放，则认为超时，修改状态确保可以切换歌曲
+      clearTimeout(this.timer)
+      this.timer = setTimeout(() => {
+        this.songReady = true
+      }, 5000)
+      this.getLyric()
     }
   },
   components: {
@@ -521,6 +528,10 @@ export default {
         justify-content space-between
         align-items center
         touch-action none
+        .btn-r-r
+          .icon
+            &.icon-favorite
+              color #d93f30
         .icon
           font-size 30px
           color $color-theme

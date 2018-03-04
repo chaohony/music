@@ -63,7 +63,7 @@ export default {
     color $color-background
     position relative
     top 6px
-    left 6px
+    left 0
     &.icon-dismiss
       font-size 15px
       top 0

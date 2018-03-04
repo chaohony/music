@@ -4,10 +4,10 @@
       <div class="play-list-wrapper" v-show="showFlag">
         <div class="play-list-container">
           <span class="icon">
-            <i class="icon-loop"></i>
+            <i :class="iconMode" @click.stop="changeMode"></i>
           </span>
           <h2 class="title">
-            <span class="title-left">单曲循环</span>
+            <span class="title-left">{{ iconText }}</span>
             <span class="title-right">
               <i class="icon-clear" @click.stop="showConfirm"></i>
             </span>
@@ -20,14 +20,17 @@
                   {{ item.name }}
                 </div>
                 <div class="icon-group">
-                  <i class="icon-not-favorite"></i>
+                  <i class="icon-group-left" 
+                     @click.stop.prevent="toggleFavorite(item)" 
+                     :class="getFavorite(item)"
+                  ></i>
                   <i class="icon-delete" @click.stop="deleteOne(item)"></i>
                 </div>
               </li>
             </transition-group>
           </scroll>
           <div class="add-container">
-            <div class="add-block">
+            <div class="add-block" @click.stop="addSongTo">
               <i class="icon0 icon-add"></i>
               添加歌曲到队列
             </div>
@@ -42,6 +45,7 @@
       <div class="background" v-show="showFlag" @click.stop="hide"></div>
     </transition>
     <confirm @confirm="confirm" @cancel="cancel" ref="confirm" text="是否清空播放列表" confirmText="清空"></confirm>
+    <add-song ref="add-song" addText="添加歌曲到列表"></add-song>
   </div>
 </template>
 
@@ -50,7 +54,10 @@ import {mapGetters, mapMutations, mapActions} from 'vuex'
 import Scroll from 'base/scroll/scroll'
 import {playMode} from 'common/js/config'
 import Confirm from 'base/confirm/confirm'
+import {playerMixin} from 'common/js/mixin'
+import AddSong from 'components/add-song/add-song'
 export default {
+  mixins: [playerMixin],
   props: {},
   methods: {
     ...mapMutations({
@@ -99,7 +106,7 @@ export default {
       this.deleteSong(item)
       setTimeout(() => {
         this.scrollToCurrent(this.currentSong)
-      }, 190)
+      }, 200)
       if (!this.playList.length) {
         this.hide()
       }
@@ -113,6 +120,9 @@ export default {
     confirm() {
       this.clearPlaylist()
       this.hide()
+    },
+    addSongTo() {
+      this.$refs['add-song'].show()
     }
   },
   computed: {
@@ -122,11 +132,24 @@ export default {
       'currentSong',
       'playMode',
       'playList'
-    ])
+    ]),
+    iconText() {
+      switch (this.iconMode) {
+        case 'icon-loop':
+          return '单曲循环'
+        case 'icon-sequence':
+          return '顺序播放'
+        case 'icon-random':
+          return '随机播放'
+        default:
+          return ''
+      }
+    }
   },
   components: {
     Scroll,
-    Confirm
+    Confirm,
+    AddSong
   },
   data () {
     return {
@@ -204,6 +227,9 @@ export default {
           .icon-group
             color $color-theme
             font-size 14px
+            .icon-group-left
+              &.icon-favorite
+                color #d93f30
             i
               display inline-block
               margin-right 8px
@@ -237,7 +263,7 @@ export default {
   right 0
   background #000
   opacity .5
-  z-index 0
+  z-index 151
   &.fall-enter-active,&.fall-leave-active
     transition all .2s linear
   &.fall-enter,&.fall-leave-to

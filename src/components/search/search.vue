@@ -31,18 +31,16 @@ import SearchBox from 'base/search-box/search-box'
 import {getHot} from 'api/search'
 import {ERR_OK} from 'api/config'
 import Suggest from 'base/suggest/suggest'
-import {mapActions, mapGetters} from 'vuex'
+import {mapActions} from 'vuex'
 import SearchList from 'base/search-list/search-list'
 import Confirm from 'base/confirm/confirm'
 import Scroll from 'base/scroll/scroll'
-import {playlistMixin} from 'common/js/mixin'
+import {playlistMixin, searchMixin} from 'common/js/mixin'
 export default {
-  mixins: [playlistMixin],
+  mixins: [playlistMixin, searchMixin],
   props: {},
   methods: {
     ...mapActions([
-      'saveSearchHistory',
-      'deleteSearchHistory',
       'deleteAll'
     ]),
     _getHot() {
@@ -51,25 +49,6 @@ export default {
           this.hot = res.data.hotkey.slice(0, 10)
         }
       })
-    },
-    onQueryChange(query) {
-      this.query = query
-    },
-    add(item) {
-      if (item.k) {
-        this.$refs['search-box'].setQuery(item.k)
-        return
-      }
-      this.$refs['search-box'].setQuery(item)
-    },
-    beforeScrollStart() {
-      this.$refs['search-box'].blur()
-    },
-    saveSearch() {
-      this.saveSearchHistory(this.query)
-    },
-    deleteOne(query) {
-      this.deleteSearchHistory(query)
     },
     clear() {
       this.deleteAll()
@@ -90,9 +69,6 @@ export default {
     }
   },
   computed: {
-    ...mapGetters([
-      'searchHistory'
-    ]),
     shortcut() {
       return this.hot.concat(this.searchHistory)
     }
@@ -107,8 +83,7 @@ export default {
   data () {
     return {
       placeholder: '搜索歌曲、歌手',
-      hot: [],
-      query: ''
+      hot: []
     }
   },
   created() {
